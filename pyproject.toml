@@ -1,0 +1,14 @@
+[project]
+name = "trustbit_theme"
+authors = [{ name = "Trustbit Technologies Pvt. Ltd.", email = "ra.pandey008@gmail.com" }]
+description = "Trustbit branding and login theme"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "trustbit_theme"
