@@ -1,0 +1,263 @@
+/* ==========================================================================
+   Trustbit — desk chrome (left sidebar + top bar)
+   Loaded via app_include_css, so this applies to the DESK only, never the
+   website/portal pages. Colours the two surfaces the login screen already
+   uses, so desk and login read as one product.
+
+   SAFETY: this only ever sets colours. No layout, no positioning, no
+   display rules — so a bad override can make something look wrong but can
+   never hide a control or break navigation.
+
+   Everything is driven by the tokens in the first block: change those and
+   the whole chrome follows.
+   ========================================================================== */
+
+:root {
+	--tbd-1: #0A1130;          /* deep navy, matches the login brand panel   */
+	--tbd-2: #141A3E;
+	--tbd-accent: #5B7CFA;     /* indigo — active item / focus               */
+	--tbd-accent-2: #9B7BFF;   /* violet — gradient partner                  */
+	--tbd-on: #EDF0F8;         /* primary text on the navy                   */
+	--tbd-on-dim: #A2ACC6;     /* secondary text                            */
+	--tbd-hover: rgba(255, 255, 255, 0.07);
+	--tbd-sel: rgba(91, 124, 250, 0.20);
+	--tbd-line: rgba(255, 255, 255, 0.10);
+
+	/* Sidebar app icon. Point this at YOUR mark — it must be a PNG/SVG with a
+	   TRANSPARENT background, or you get a solid tile on the dark sidebar.
+	   Set to `none` to keep the stock app icon (ERPNext's own logo) instead. */
+	--tbd-app-mark: url("/files/trustbit-mark.png");
+}
+
+/* ============================== BRAND LOGO ==============================
+   Frappe assumes the site logo is a SQUARE icon and hard-codes it into a
+   24-32px box:
+       .app-logo        { width: 24px; }              desk/global.scss
+       .navbar-home img { height:32px; width:32px; }  desk/navbar.scss
+   A wide wordmark (ours is 150x50, 3:1) gets squashed and visually clipped
+   by that. Restore its aspect ratio and cap it by HEIGHT instead, letting
+   width follow.
+
+   This is the one place the file sets geometry rather than colour. It is
+   scoped to the logo image only, so it cannot hide or move any control.
+
+   Also: the wordmark is dark blue/violet, which disappeared against the new
+   navy chrome — inverted to white, exactly as on the login page. */
+
+/* --- TOP BAR: the site wordmark ---
+   `brightness(0) invert(1)` is correct HERE because the wordmark is dark
+   text on a transparent background — it becomes clean white on the navy. */
+.navbar .app-logo,
+.navbar-home img,
+.navbar .navbar-brand img {
+	height: 28px !important;
+	width: auto !important;
+	max-width: 160px !important;
+	object-fit: contain !important;
+	filter: brightness(0) invert(1);
+	opacity: .97;
+}
+
+/* --- SIDEBAR: the app icon ---
+   This slot holds the APP's own logo (erpnext-logo.svg), not the site logo.
+   That file is a filled square, so `brightness(0) invert(1)` turned the whole
+   tile solid white — the blank white square. Two fixes:
+     1. swap the image for the Trustbit mark (transparent PNG), and
+     2. do NOT invert it — the mark is already full-colour and reads on navy.
+   `content:` on an <img> replaces the rendered image in Blink/WebKit/Gecko;
+   the background-image on the wrapper is the fallback if that is ignored. */
+.body-sidebar .header-logo img,
+.body-sidebar .header-logo-container img,
+.body-sidebar .sidebar-header img {
+	content: var(--tbd-app-mark, none);
+	height: 26px !important;
+	width: 26px !important;
+	object-fit: contain !important;
+	filter: none !important;      /* override — must not be inverted */
+	opacity: 1 !important;
+}
+
+.navbar .header-logo,
+.body-sidebar .header-logo,
+.body-sidebar .header-logo-container {
+	background: transparent !important;
+	box-shadow: none !important;
+	border: 0 !important;
+	width: auto !important;
+}
+
+/* ============================ LEFT SIDEBAR ============================ */
+
+.body-sidebar-container,
+.body-sidebar {
+	background: linear-gradient(175deg, var(--tbd-1) 0%, var(--tbd-2) 100%) !important;
+	border-right: 1px solid var(--tbd-line) !important;
+}
+
+/* Frappe drives sidebar states from these three variables — rebinding them
+   here is cleaner than chasing every individual rule. */
+.body-sidebar-container,
+.body-sidebar {
+	--sidebar-hover-color: var(--tbd-hover);
+	--sidebar-select-color: var(--tbd-sel);
+	--sidebar-active-color: var(--tbd-sel);
+	--sidebar-border-color: var(--tbd-line);
+	--divider-color: var(--tbd-line);
+}
+
+/* text + icons */
+.body-sidebar,
+.body-sidebar a,
+.body-sidebar .nav-item,
+.body-sidebar .sidebar-item-label,
+.body-sidebar .header-title,
+.body-sidebar span,
+.body-sidebar .item-anchor {
+	color: var(--tbd-on) !important;
+}
+.body-sidebar .header-subtitle,
+.body-sidebar .text-muted,
+.body-sidebar .sidebar-label,
+.body-sidebar small {
+	color: var(--tbd-on-dim) !important;
+}
+/* Frappe icons are SVG using currentColor or a fill token */
+.body-sidebar svg,
+.body-sidebar .icon,
+.body-sidebar use {
+	color: var(--tbd-on) !important;
+	fill: none;
+	stroke: currentColor;
+}
+.body-sidebar .es-icon,
+.body-sidebar .icon-xs,
+.body-sidebar .icon-sm { opacity: .9; }
+
+/* hover / active rows */
+.body-sidebar .nav-item:hover,
+.body-sidebar .sidebar-item-container:hover,
+.body-sidebar .item-anchor:hover,
+.body-sidebar .standard-sidebar-item:hover {
+	background-color: var(--tbd-hover) !important;
+	border-radius: 8px;
+}
+.body-sidebar .selected,
+.body-sidebar .standard-sidebar-item.selected,
+.body-sidebar .sidebar-item-container.selected > .desk-sidebar-item {
+	background-color: var(--tbd-sel) !important;
+	border-radius: 8px;
+	box-shadow: inset 2px 0 0 var(--tbd-accent);
+}
+
+/* app switcher block at the top */
+.body-sidebar .sidebar-header,
+.body-sidebar-top .sidebar-header {
+	border-bottom: 1px solid var(--tbd-line) !important;
+}
+.body-sidebar .header-logo { border-radius: 8px; }
+
+/* keyboard-shortcut pills, badges, counts */
+.body-sidebar kbd,
+.body-sidebar .shortcut,
+.body-sidebar .badge {
+	background: rgba(255, 255, 255, .10) !important;
+	color: var(--tbd-on-dim) !important;
+	border-color: var(--tbd-line) !important;
+}
+
+/* user block pinned at the bottom */
+.body-sidebar-bottom {
+	border-top: 1px solid var(--tbd-line) !important;
+	background: transparent !important;
+}
+.body-sidebar-bottom:hover { background: var(--tbd-hover) !important; }
+
+/* dropdowns that open FROM the sidebar are normal popovers — keep them on the
+   default light surface so their menu text stays readable */
+.body-sidebar .dropdown-menu {
+	background: var(--fg-color, #fff) !important;
+	color: var(--text-color, #1f272e) !important;
+}
+.body-sidebar .dropdown-menu a,
+.body-sidebar .dropdown-menu .dropdown-item {
+	color: var(--text-color, #1f272e) !important;
+}
+
+/* ============================== TOP BAR ============================== */
+
+.navbar {
+	background: linear-gradient(90deg, var(--tbd-1) 0%, var(--tbd-2) 60%, #1B2350 100%) !important;
+	border-bottom: 1px solid var(--tbd-line) !important;
+}
+
+.navbar,
+.navbar a,
+.navbar .navbar-breadcrumbs,
+.navbar .navbar-breadcrumbs a,
+.navbar .breadcrumb,
+.navbar .breadcrumb a,
+.navbar .breadcrumb-item,
+.navbar h1, .navbar h2, .navbar h3, .navbar h4,
+.navbar .title-text,
+.navbar span {
+	color: var(--tbd-on) !important;
+}
+.navbar .breadcrumb-item + .breadcrumb-item::before,
+.navbar .navbar-breadcrumbs li + li::before {
+	color: var(--tbd-on-dim) !important;
+}
+.navbar a:hover,
+.navbar .breadcrumb a:hover { color: #fff !important; }
+
+.navbar svg,
+.navbar .icon,
+.navbar use {
+	color: var(--tbd-on) !important;
+	stroke: currentColor;
+}
+
+/* icon buttons in the bar (the "..." menu, notifications, avatar) */
+.navbar .btn,
+.navbar .navbar-right .btn {
+	background: transparent !important;
+	border-color: transparent !important;
+	color: var(--tbd-on) !important;
+}
+.navbar .btn:hover,
+.navbar .navbar-right .btn:hover {
+	background: var(--tbd-hover) !important;
+}
+
+/* the navbar's own dropdowns stay light for readability */
+.navbar .dropdown-menu {
+	background: var(--fg-color, #fff) !important;
+	color: var(--text-color, #1f272e) !important;
+}
+.navbar .dropdown-menu a,
+.navbar .dropdown-menu .dropdown-item,
+.navbar .dropdown-menu .text-muted {
+	color: var(--text-color, #1f272e) !important;
+}
+
+/* search input inside the bar, if present */
+.navbar input,
+.navbar .form-control {
+	background: rgba(255, 255, 255, .08) !important;
+	border-color: var(--tbd-line) !important;
+	color: var(--tbd-on) !important;
+}
+.navbar input::placeholder { color: var(--tbd-on-dim) !important; }
+
+/* ===================== DARK DESK THEME ALIGNMENT ===================== */
+/* Frappe ships its own dark theme. Our navy is already dark, so we only
+   deepen it slightly and keep the same tokens — no separate palette. */
+[data-theme="dark"] {
+	--tbd-1: #070A16;
+	--tbd-2: #0F1430;
+}
+
+/* ========================= REDUCED MOTION ========================== */
+/* Nothing here animates, but be explicit so future edits inherit the rule. */
+@media (prefers-reduced-motion: reduce) {
+	.body-sidebar *, .navbar * { transition-duration: .01ms !important; }
+}

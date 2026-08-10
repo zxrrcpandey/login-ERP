@@ -9,6 +9,10 @@ app_license = "mit"
 # Both files no-op unless body[data-path="login"].
 # ?v= is a cache-buster. nginx serves /assets with Cache-Control max-age=31536000,
 # so without bumping this, browsers keep the old file for a year and never see edits.
+# Desk-only: colours the left sidebar and the top bar. Never loads on
+# website/portal pages, so the login theme below is unaffected.
+app_include_css = "/assets/trustbit_theme/css/trustbit_desk.css?v=4"
+
 web_include_css = "/assets/trustbit_theme/css/trustbit_login.css?v=6"
 web_include_js = "/assets/trustbit_theme/js/trustbit_login.js?v=6"
 
