@@ -4,7 +4,8 @@ A drop-in Frappe app that replaces the stock ERPNext login page with a split-scr
 
 It is a **separate app on purpose**: `bench update` overwrites `apps/frappe/**`. The v16 update that prompted this rewrote `www/login.html` (+235 lines) and `login.bundle.scss` (+524 lines) — anything customised in core would have been destroyed. This app touches **no** Frappe or ERPNext source file.
 
-- Tested on **Frappe v16 / ERPNext v16** (16.29 / 16.30)
+- Tested on **Frappe v16 / ERPNext v16** (16.29 / 16.30; desk theme updated for 16.60)
+- Also brands the **desk**: navy sidebar, dock and Trustbit logo (see [Desk theme](#desk-theme))
 - No build step, no npm dependencies, no external requests
 - Auto-brands itself from your site's own logo and app name
 - Uninstall restores the stock page instantly
@@ -195,6 +196,29 @@ The depth grid lives in a real `<i class="tb-grid">` element because `.tb-brand:
 
 ---
 
+## Desk theme
+
+Two more pieces, desk-only (they never load on `/login`):
+
+| File | Hook | What it does |
+|---|---|---|
+| `public/css/trustbit_desk.css` | `app_include_css` (`?v=6`) | Navy left sidebar and dock, readable active row and header states, logo sizing. Colours only, apart from the logo size. |
+| `boot.py` | `extend_bootinfo` | Puts the Trustbit mark (`/files/trustbit-mark.png`) in the dock corner for ERPNext and Framework pages, and shows ERPNext as "Trustbit ERP". |
+
+**Where each logo comes from on Frappe 16.5x+** (the desk was redesigned; the top navbar is gone):
+
+| Place | Source | Set by |
+|---|---|---|
+| Dock corner (top-left on every desk page), apps screen, app switcher | the app's `app_logo_url` | `boot.py` |
+| `/desk` home screen header | Navbar Settings → Application Logo | site setting (`/files/trustbit.png`) |
+| Browser tab | Website Settings → Favicon | site setting |
+
+Change `TRUSTBIT_MARK` / `TRUSTBIT_TITLE` in `boot.py` for another brand. The mark must be a **transparent** PNG/SVG (it sits on navy). Apps not listed in `boot.py` (Frappe HR, India Compliance…) keep their own logos.
+
+**After changing it:** bump the `?v=` on `app_include_css` for CSS edits, and run `bench --site <site> clear-cache` for `boot.py` edits (boot info is cached per session), then `bench restart`.
+
+**Check hover states after any Frappe update.** The sidebar header only turned into an unreadable white box with the mouse over it (Frappe's hover colour under our white text), so a resting-page screenshot missed it. The full write-up of what broke at 16.60 and why is in the Trustbit Company workspace, `Testing Project/ERPNEXT_V16_LESSONS.md` §6.7.
+
 ## Verify an install
 
 ```bash
@@ -213,7 +237,7 @@ curl -s -X POST $SITE/api/method/login \
 
 | | |
 |---|---|
-| Frappe | v16 (developed against 16.29) |
+| Frappe | v16 (login developed against 16.29; desk theme updated for the 16.5x+ dock, checked on 16.60.2) |
 | ERPNext | v16 (optional — this themes Frappe's login page) |
 | Build tooling | none |
 | External requests | none (no CDN, no fonts, no trackers) |

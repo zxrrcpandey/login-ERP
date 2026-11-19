@@ -54,8 +54,15 @@
 	width: auto !important;
 	max-width: 160px !important;
 	object-fit: contain !important;
-	filter: brightness(0) invert(1);
 	opacity: .97;
+}
+/* Invert ONLY inside the navy `.navbar` (Frappe <= 16.4x). On 16.5x+ the home
+   screen's header (`<header>` > `.navbar-home`) is WHITE, and inverting there
+   turned the wordmark white-on-white: the logo looked missing. */
+.navbar .app-logo,
+.navbar .navbar-home img,
+.navbar .navbar-brand img {
+	filter: brightness(0) invert(1);
 }
 
 /* --- SIDEBAR: the app icon ---
@@ -141,18 +148,45 @@
 	background-color: var(--tbd-hover) !important;
 	border-radius: 8px;
 }
+/* Frappe 16.5x+ marks the current row `.active-sidebar` and paints it
+   var(--surface-elevation-3) — white — under our white text: the row went
+   blank. The `:has(...)` row is a collapsed group holding the current page. */
 .body-sidebar .selected,
 .body-sidebar .standard-sidebar-item.selected,
-.body-sidebar .sidebar-item-container.selected > .desk-sidebar-item {
-	background-color: var(--tbd-sel) !important;
+.body-sidebar .sidebar-item-container.selected > .desk-sidebar-item,
+.body-sidebar .standard-sidebar-item.active-sidebar,
+.body-sidebar .sidebar-item-container:has(> .nested-container.hidden .active-sidebar) > .standard-sidebar-item {
+	background: var(--tbd-sel) !important;
 	border-radius: 8px;
-	box-shadow: inset 2px 0 0 var(--tbd-accent);
+	box-shadow: inset 2px 0 0 var(--tbd-accent) !important;
+}
+.body-sidebar .standard-sidebar-item.active-sidebar .item-anchor,
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-label {
+	color: #fff !important;
+	font-weight: 500;
 }
 
 /* app switcher block at the top */
 .body-sidebar .sidebar-header,
 .body-sidebar-top .sidebar-header {
 	border-bottom: 1px solid var(--tbd-line) !important;
+}
+/* Frappe 16.5x+ paints this header light grey on hover (surface-gray-3) and
+   near-white while its menu is open (surface-elevation-2) — under our white
+   text that was a blank white box. Keep both states on the navy. */
+.body-sidebar .sidebar-header:hover,
+.body-sidebar .sidebar-header.hover {
+	background: var(--tbd-hover) !important;
+}
+.body-sidebar .sidebar-header[aria-expanded="true"],
+.body-sidebar .sidebar-header.open,
+.body-sidebar .sidebar-header.active {
+	background: var(--tbd-sel) !important;
+	box-shadow: none !important;
+}
+.body-sidebar .sidebar-header .drop-icon,
+.body-sidebar .sidebar-header:hover .drop-icon {
+	color: var(--tbd-on) !important;
 }
 .body-sidebar .header-logo { border-radius: 8px; }
 
@@ -182,6 +216,45 @@
 .body-sidebar .dropdown-menu .dropdown-item {
 	color: var(--text-color, #1f272e) !important;
 }
+
+/* =============================== DOCK ================================
+   Frappe 16.5x+ adds the "dock": the narrow icon column at the far left
+   (logo, search, notifications, module icons, avatar). It replaced the old
+   top `.navbar`, so the TOP BAR rules further down no longer match anything
+   on 16.60 — kept only in case the site is ever rolled back.
+   The logo in it is the APP's logo; boot.py points ERPNext's at the
+   Trustbit mark. Colours only, plus the logo size. */
+.dock {
+	--dock-bg: var(--tbd-1);
+	--dock-ink: var(--tbd-on-dim);
+	--dock-ink-hover: var(--tbd-on);
+	--dock-ink-active: #fff;
+	--outline-gray-1: var(--tbd-line);
+	background: linear-gradient(175deg, var(--tbd-1) 0%, var(--tbd-2) 100%) !important;
+	border-color: var(--tbd-line) !important;
+}
+.dock .dock-logo .header-logo img {
+	width: 30px !important;
+	height: 30px !important;
+	object-fit: contain !important;
+	filter: none !important;
+}
+.dock .dock-item,
+.dock .dock-utilities .dock-item {
+	color: var(--tbd-on) !important;
+}
+.dock .dock-item:hover,
+.dock .dock-utilities .dock-item:hover {
+	background: var(--tbd-hover) !important;
+	color: #fff !important;
+}
+.dock .dock-item.active,
+.dock .dock-utilities .dock-item[aria-expanded="true"] {
+	background: var(--tbd-sel) !important;
+	box-shadow: inset 2px 0 0 var(--tbd-accent) !important;
+	color: #fff !important;
+}
+.dock .dock-item-dot { background: var(--tbd-accent) !important; }
 
 /* ============================== TOP BAR ============================== */
 
