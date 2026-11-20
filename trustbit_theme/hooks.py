@@ -16,6 +16,12 @@ app_include_css = "/assets/trustbit_theme/css/trustbit_desk.css?v=6"
 # Frappe 16.5x+ shows the app's logo (not the site logo) in the dock corner: rebrand ERPNext's.
 extend_bootinfo = "trustbit_theme.boot.extend_bootinfo"
 
+# Frappe core bug workarounds (see overrides.py). Drop each once Frappe ships the fix.
+override_whitelisted_methods = {
+	# 16.60.2: Link/Assign To dropdown crashes for select-only users (frappe#47979, unmerged)
+	"frappe.desk.search.search_link": "trustbit_theme.overrides.search_link",
+}
+
 web_include_css = "/assets/trustbit_theme/css/trustbit_login.css?v=6"
 web_include_js = "/assets/trustbit_theme/js/trustbit_login.js?v=6"
 
