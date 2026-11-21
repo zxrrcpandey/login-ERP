@@ -201,6 +201,16 @@
 			[__("Expected Start"), format_date(doc.exp_start_date)],
 			[__("Expected End"), format_date(doc.exp_end_date)],
 			[__("Progress"), doc.progress != null ? `${doc.progress}%` : ""],
+			...(doc.status === "Need Clarification" && doc.clarification_requested_from
+				? [
+						[
+							__("Clarification From"),
+							frappe.user_info(doc.clarification_requested_from).fullname ||
+								doc.clarification_requested_from,
+						],
+						[__("Question"), doc.clarification_question],
+				  ]
+				: []),
 		];
 		const cells = rows
 			.map(

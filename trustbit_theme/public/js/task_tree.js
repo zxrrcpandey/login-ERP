@@ -63,6 +63,10 @@
 			color: "#7c3aed",
 			shape: `${OUTLINE}<path d="M8 4.8V8l2.2 1.4"/>`,
 		},
+		"Need Clarification": {
+			color: "#ca8a04",
+			shape: `${OUTLINE}<path d="M6.3 6.3a1.8 1.8 0 1 1 2.7 1.6c-.6.3-1 .7-1 1.3M8 11.3v.1"/>`,
+		},
 		Overdue: {
 			color: "#dc2626",
 			shape: `${SOLID}<path d="M8 4.6v4M8 11.3v.1" stroke="#fff"/>`,
