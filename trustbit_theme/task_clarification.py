@@ -192,8 +192,9 @@ def on_update(doc, method=None):
 
 
 def _notify(user, doc, subject, content=""):
+	# Frappe matches recipients by email, and Administrator's user ID is not its email.
 	enqueue_create_notification(
-		user,
+		frappe.db.get_value("User", user, "email") or user,
 		{
 			"type": "Alert",
 			"document_type": "Task",

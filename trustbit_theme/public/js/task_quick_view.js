@@ -1,4 +1,4 @@
-// Read-only Task quick view shared by the Task Tree and the Task Kanban board.
+// Read-only Task quick view and status icons, shared by the Task Tree and Kanban board.
 // Both load this file through hooks, so it must be safe to evaluate more than once.
 (() => {
 	frappe.provide("frappe.trustbit");
@@ -390,5 +390,53 @@
 		});
 	};
 
+	const OUTLINE = '<circle cx="8" cy="8" r="6"/>';
+	const SOLID = '<circle cx="8" cy="8" r="6.6" fill="currentColor" stroke="none"/>';
+	// Each status differs by shape as well as colour. Colours match the Task Status board.
+	const STATUS_ICONS = {
+		Open: { color: "#c2570c", shape: OUTLINE },
+		Working: {
+			color: "#2563eb",
+			shape: `${OUTLINE}<path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor" stroke="none"/>`,
+		},
+		"Pending Review": {
+			color: "#7c3aed",
+			shape: `${OUTLINE}<path d="M8 4.8V8l2.2 1.4"/>`,
+		},
+		"Need Clarification": {
+			color: "#ca8a04",
+			shape: `${OUTLINE}<path d="M6.3 6.3a1.8 1.8 0 1 1 2.7 1.6c-.6.3-1 .7-1 1.3M8 11.3v.1"/>`,
+		},
+		Overdue: {
+			color: "#dc2626",
+			shape: `${SOLID}<path d="M8 4.6v4M8 11.3v.1" stroke="#fff"/>`,
+		},
+		Completed: {
+			color: "#16a34a",
+			shape: `${SOLID}<path d="m5 8.2 2.1 2.1L11 6" stroke="#fff"/>`,
+		},
+		Cancelled: {
+			color: "#6b7280",
+			shape: `${OUTLINE}<path d="m5.9 5.9 4.2 4.2m0-4.2-4.2 4.2"/>`,
+		},
+		Template: {
+			color: "#6b7280",
+			shape: '<circle cx="8" cy="8" r="6" stroke-dasharray="2.4 2.4"/>',
+		},
+	};
+
+	const task_status_icon_html = (status, title) => {
+		const icon = STATUS_ICONS[status];
+		if (!icon) return "";
+		const text = esc(title || __(status));
+		return `<span class="trustbit-task-status" role="img" title="${text}" aria-label="${text}"
+			style="flex: none; display: inline-flex; margin-left: 6px; color: ${icon.color};">
+			<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+				stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+				aria-hidden="true">${icon.shape}</svg>
+		</span>`;
+	};
+
 	frappe.trustbit.show_task_quick_view = show_quick_view;
+	frappe.trustbit.task_status_icon_html = task_status_icon_html;
 })();
