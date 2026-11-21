@@ -3,7 +3,8 @@
 //   Ctrl/Cmd-click opens the Task form in a new tab.
 // - "View" in the row's ... menu opens the Task form.
 // - The chevron and the rest of the row still expand and collapse.
-// - Each task and sub-task shows a status icon after its name.
+// - Each task and sub-task shows a status icon after its name. A parent whose
+//   sub-tasks are all Completed or Cancelled shows as finished.
 (() => {
 	const settings = frappe.treeview_settings && frappe.treeview_settings["Task"];
 	if (!settings || settings.trustbit_extended) return;
@@ -79,14 +80,23 @@
 			shape: '<circle cx="8" cy="8" r="6" stroke-dasharray="2.4 2.4"/>',
 		},
 	};
-	const STATUS_BATCH_SIZE = 100;
+	const FINISHED_STATUSES = new Set(["Completed", "Cancelled"]);
+	const STATUS_PAGE_SIZE = 500;
+	const STATUS_REFRESH_DELAY = 120;
 
-	const set_status_icon = (row, status) => {
+	const set_status_icon = (row, { status, saved_status }) => {
 		row.querySelector(":scope > .trustbit-task-status")?.remove();
 		const icon = STATUS_ICONS[status];
 		const label = row.querySelector(":scope > a.tree-label");
 		if (!icon || !label) return;
-		const text = frappe.utils.escape_html(__(status));
+		const text = frappe.utils.escape_html(
+			status === saved_status
+				? __(status)
+				: __("{0} (all sub-tasks finished, saved status: {1})", [
+						__(status),
+						__(saved_status),
+				  ])
+		);
 		label.insertAdjacentHTML(
 			"afterend",
 			`<span class="trustbit-task-status" role="img" title="${text}" aria-label="${text}"
@@ -98,33 +108,82 @@
 		);
 	};
 
-	// get_children doesn't return status, so fetch it for the rows on screen.
-	const load_status_icons = ($rows) => {
-		const rows_by_name = new Map();
-		$rows.each(function () {
-			const name = this.dataset.label;
-			if (!name) return;
-			if (!rows_by_name.has(name)) rows_by_name.set(name, []);
-			rows_by_name.get(name).push(this);
+	// get_children doesn't return status, and collapsed sub-tasks aren't on screen.
+	const fetch_task_statuses = async () => {
+		const tasks = [];
+		for (let start = 0; ; start += STATUS_PAGE_SIZE) {
+			const page = await frappe.db.get_list("Task", {
+				filters: [["docstatus", "<", 2]],
+				fields: ["name", "status", "parent_task"],
+				order_by: "name asc",
+				limit: STATUS_PAGE_SIZE,
+				limit_start: start,
+			});
+			tasks.push(...(page || []));
+			if (!page || page.length < STATUS_PAGE_SIZE) return tasks;
+		}
+	};
+
+	// Display only: a parent whose sub-tasks are all Completed or Cancelled shows as
+	// finished. The saved status is never changed.
+	const get_display_statuses = (tasks) => {
+		const by_name = new Map(tasks.map((task) => [task.name, task]));
+		const children = new Map();
+		tasks.forEach((task) => {
+			if (!task.parent_task || !by_name.has(task.parent_task)) return;
+			if (!children.has(task.parent_task)) children.set(task.parent_task, []);
+			children.get(task.parent_task).push(task.name);
 		});
 
-		const names = [...rows_by_name.keys()];
-		for (let i = 0; i < names.length; i += STATUS_BATCH_SIZE) {
-			const batch = names.slice(i, i + STATUS_BATCH_SIZE);
-			frappe.db
-				.get_list("Task", {
-					filters: [["name", "in", batch]],
-					fields: ["name", "status"],
-					limit: batch.length,
-				})
-				.then((tasks) => {
-					(tasks || []).forEach((task) => {
-						rows_by_name
-							.get(task.name)
-							?.forEach((row) => set_status_icon(row, task.status));
+		const resolved = new Map();
+		const resolve = (name, path = new Set()) => {
+			if (resolved.has(name)) return resolved.get(name);
+			const task = by_name.get(name);
+			// A broken parent loop falls back to the saved status.
+			if (path.has(name)) return task.status;
+			path.add(name);
+			const child_statuses = (children.get(name) || []).map((child) => resolve(child, path));
+			path.delete(name);
+
+			let status = task.status;
+			if (
+				child_statuses.length &&
+				!FINISHED_STATUSES.has(status) &&
+				status !== "Template" &&
+				child_statuses.every((child) => FINISHED_STATUSES.has(child))
+			) {
+				status = child_statuses.every((child) => child === "Cancelled")
+					? "Cancelled"
+					: "Completed";
+			}
+			resolved.set(name, status);
+			return status;
+		};
+		tasks.forEach((task) => resolve(task.name));
+		return resolved;
+	};
+
+	let status_refresh_timer = null;
+	let status_refresh_id = 0;
+	const refresh_status_icons = ($tree) => {
+		clearTimeout(status_refresh_timer);
+		status_refresh_timer = setTimeout(async () => {
+			const refresh_id = ++status_refresh_id;
+			const tasks = await fetch_task_statuses();
+			// A newer refresh has started, so this data may already be out of date.
+			if (refresh_id !== status_refresh_id) return;
+			const saved = new Map(tasks.map((task) => [task.name, task.status]));
+			const display = get_display_statuses(tasks);
+			$tree.find(".tree-link").each(function () {
+				const name = this.dataset.label;
+				if (saved.has(name)) {
+					set_status_icon(this, {
+						status: display.get(name),
+						saved_status: saved.get(name),
 					});
-				});
-		}
+				}
+			});
+		}, STATUS_REFRESH_DELAY);
 	};
 
 	// Coming back from a Task form, show any status changed there.
@@ -134,7 +193,7 @@
 			const [view, doctype] = frappe.get_route() || [];
 			const tree = frappe.views?.trees?.["Task"]?.tree;
 			if (view === "Tree" && doctype === "Task" && tree) {
-				load_status_icons(tree.wrapper.find(".tree-link"));
+				refresh_status_icons(tree.wrapper);
 			}
 		});
 	}
@@ -142,7 +201,7 @@
 	const base_on_node_render = settings.on_node_render;
 	settings.on_node_render = function (node, deep) {
 		link_labels(node);
-		load_status_icons(node.$tree_link.add(node.$ul.find(".tree-link")));
+		refresh_status_icons(node.$tree_link.closest(".tree"));
 		return base_on_node_render && base_on_node_render.call(this, node, deep);
 	};
 })();
