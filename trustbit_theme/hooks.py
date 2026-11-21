@@ -13,6 +13,9 @@ app_license = "mit"
 # website/portal pages, so the login theme below is unaffected.
 app_include_css = "/assets/trustbit_theme/css/trustbit_desk.css?v=6"
 
+# Task Tree: "View" quick-view popup in the row menu, and task names as links.
+doctype_tree_js = {"Task": "public/js/task_tree.js"}
+
 # Frappe 16.5x+ shows the app's logo (not the site logo) in the dock corner: rebrand ERPNext's.
 extend_bootinfo = "trustbit_theme.boot.extend_bootinfo"
 
