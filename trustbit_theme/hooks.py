@@ -13,6 +13,9 @@ app_license = "mit"
 # website/portal pages, so the login theme below is unaffected.
 app_include_css = "/assets/trustbit_theme/css/trustbit_desk.css?v=6"
 
+# Trustbit View: Task board by Is Group folders, listed below Tree in the view menu.
+app_include_js = "/assets/trustbit_theme/js/trustbit_view.js?v=4"
+
 # Task quick-view popup: opened from task names in the Tree and from cards on the Kanban board.
 doctype_tree_js = {"Task": ["public/js/task_quick_view.js", "public/js/task_tree.js"]}
 doctype_kanban_js = {"Task": ["public/js/task_quick_view.js", "public/js/task_kanban.js"]}
