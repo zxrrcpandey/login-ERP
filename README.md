@@ -6,6 +6,7 @@ It is a **separate app on purpose**: `bench update` overwrites `apps/frappe/**`.
 
 - Tested on **Frappe v16 / ERPNext v16** (16.29 / 16.30; desk theme updated for 16.60)
 - Also brands the **desk**: navy sidebar, dock and Trustbit logo (see [Desk theme](#desk-theme))
+- Adds **Task features**: quick view, status icons, Need Clarification and Trustbit View (see [Task features](#task-features))
 - No build step, no npm dependencies, no external requests
 - Auto-brands itself from your site's own logo and app name
 - Uninstall restores the stock page instantly
@@ -218,6 +219,30 @@ Change `TRUSTBIT_MARK` / `TRUSTBIT_TITLE` in `boot.py` for another brand. The ma
 **After changing it:** bump the `?v=` on `app_include_css` for CSS edits, and run `bench --site <site> clear-cache` for `boot.py` edits (boot info is cached per session), then `bench restart`.
 
 **Check hover states after any Frappe update.** The sidebar header only turned into an unreadable white box with the mouse over it (Frappe's hover colour under our white text), so a resting-page screenshot missed it. The full write-up of what broke at 16.60 and why is in the Trustbit Company workspace, `Testing Project/ERPNEXT_V16_LESSONS.md` §6.7.
+
+## Task features
+
+These need ERPNext's **Task** DocType and were built and checked on Frappe 16.60.2 / ERPNext 16.60.0.
+
+| Feature | What it does | Files |
+|---|---|---|
+| Quick view | Task popup with details, description, Activity, images and image preview | `public/js/task_quick_view.js` |
+| Task Tree | Popup from the task name, View action, status icons, parents shown as finished when all sub-tasks are Completed or Cancelled (display only) | `public/js/task_tree.js` |
+| Kanban | Popup from cards, status icons, per-user Status filter | `public/js/task_kanban.js` |
+| Need Clarification | Ask a selected person a question. Their reply restores the previous status and alerts the sender. | `task_clarification.py`, `public/js/task_clarification.js`, `public/js/task_list.js` |
+| **Trustbit View** | Task board by **Is Group** folders, below **Tree** in the view menu, at `/desk/trustbit-view` | `public/js/trustbit_view.js` |
+
+**Trustbit View** offers Sidebar, Breadcrumb, Tabs and Swimlanes layouts. Cards show status, project, folder, Expected End Date, priority, assignees and last-updated age. Users can assign, edit the date, and drag cards between statuses. It uses standard Frappe methods, so normal Task permissions apply.
+
+**After changing it:**
+
+- Bump `?v=` on `app_include_js` in `hooks.py` for `trustbit_view.js`. `/assets` is cached for a year.
+- Run `bench --site <site> clear-cache`, then `bench restart`, because `hooks.py` is cached.
+- Run `bench --site <site> migrate` on a new site, so `after_migrate` creates the Need Clarification status and its hidden fields.
+
+Standard Kanban boards are locked outside developer mode. To get a Need Clarification column, use a non-standard copy of the board.
+
+The full feature list, bugs, fixes, rollback backups and open items are in the Trustbit Company workspace, `Testing Project/ERPNEXT_V16_LESSONS.md` Part 9.
 
 ## Verify an install
 
