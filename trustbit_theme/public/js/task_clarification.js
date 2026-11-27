@@ -94,7 +94,9 @@
 					frappe.utils.escape_html(full_name(asked)),
 				]);
 				frm.set_intro(
-					question ? `${message}: ${frappe.utils.escape_html(question)}` : message,
+					question
+						? `${message}:<br>${frappe.utils.escape_html(question).replace(/\r?\n/g, "<br>")}`
+						: message,
 					"yellow"
 				);
 				if (asked === frappe.session.user) {

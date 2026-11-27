@@ -208,16 +208,19 @@
 							frappe.user_info(doc.clarification_requested_from).fullname ||
 								doc.clarification_requested_from,
 						],
-						[__("Question"), doc.clarification_question],
+						// Long, multi-line text: full width, line breaks kept, scrolls if very long.
+						[__("Question"), doc.clarification_question, true],
 				  ]
 				: []),
 		];
 		const cells = rows
 			.map(
-				([label, value]) => `
-				<div class="col-sm-6" style="margin-bottom: 12px;">
+				([label, value, wide]) => `
+				<div class="${wide ? "col-sm-12" : "col-sm-6"}" style="margin-bottom: 12px;">
 					<div class="text-muted small">${esc(label)}</div>
-					<div>${esc(value) || "-"}</div>
+					<div style="white-space: pre-line; overflow-wrap: anywhere;${
+						wide ? " max-height: 40vh; overflow-y: auto;" : ""
+					}">${esc(value) || "-"}</div>
 				</div>`
 			)
 			.join("");
@@ -356,7 +359,29 @@
 	};
 
 	const show_quick_view = (name) => {
-		frappe.db.get_doc("Task", name).then((doc) => {
+		// frappe.client.get leaves out _assign, so read the assignees separately.
+		Promise.all([
+			frappe.db.get_doc("Task", name),
+			frappe.db.get_value("Task", name, "_assign").catch(() => null),
+		])
+			.then(([doc, assign]) => {
+				doc._assign = assign?.message?._assign || doc._assign;
+				// Boot only knows some users; fetch full names so assignees don't show as emails.
+				let users = [];
+				try {
+					users = JSON.parse(doc._assign || "[]");
+				} catch (e) {}
+				if (!users.length) return doc;
+				return frappe
+					.call({
+						method: "frappe.desk.form.load.get_user_info_for_viewers",
+						args: { users: JSON.stringify(users) },
+					})
+					.then((r) => frappe.update_user_info(r.message || {}))
+					.catch(() => {})
+					.then(() => doc);
+			})
+			.then((doc) => {
 			const dialog = new frappe.ui.Dialog({
 				// Dialog renders its title as HTML.
 				title: esc(`${doc.subject || doc.name} (${doc.name})`),

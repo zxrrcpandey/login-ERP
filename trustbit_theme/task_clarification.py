@@ -147,6 +147,12 @@ def _start_clarification(doc, old_status):
 	)
 
 
+def _html_text(text):
+	"""Escape typed text for HTML and keep its line breaks, so numbered questions stay on separate lines."""
+	text = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+	return escape_html(text).replace("\n", "<br>")
+
+
 def _validate_user(user):
 	if not frappe.db.get_value("User", user, "enabled"):
 		frappe.throw(
@@ -167,7 +173,7 @@ def on_update(doc, method=None):
 	question = doc.clarification_question or ""
 	comment = _("Clarification requested from {0}").format(frappe.bold(escape_html(get_fullname(user))))
 	if question:
-		comment += "<br>" + escape_html(question)
+		comment += "<br>" + _html_text(question)
 	doc.add_comment("Comment", text=comment)
 
 	if user == frappe.session.user:
@@ -186,7 +192,7 @@ def on_update(doc, method=None):
 				"assign_to": [user],
 				"doctype": "Task",
 				"name": doc.name,
-				"description": escape_html(question) or _("Clarification needed on {0}").format(doc.name),
+				"description": _html_text(question) or _("Clarification needed on {0}").format(doc.name),
 			}
 		)
 
@@ -204,7 +210,7 @@ def _notify(user, doc, subject, content=""):
 				frappe.bold(escape_html(doc.subject or doc.name)),
 			),
 			"from_user": frappe.session.user,
-			"email_content": escape_html(content),
+			"email_content": _html_text(content),
 		},
 	)
 
@@ -253,7 +259,7 @@ def reply_clarification(task: str, reply: str):
 
 	doc.add_comment(
 		"Comment",
-		text=_("Clarification reply") + "<br>" + escape_html(reply),
+		text=_("Clarification reply") + "<br>" + _html_text(reply),
 	)
 	if requested_by and requested_by != frappe.session.user:
 		_notify(requested_by, doc, _("{0} replied to your clarification on {1}"), reply)
